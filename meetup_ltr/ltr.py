@@ -156,12 +156,14 @@ with col_features[1]:
         highlight_column = "score"
         highlight_threshold = df.iloc[1].score
 
+
+    
 if DEMO_STEPS.index(st.session_state.step) >= DEMO_STEPS.index("relevance"):
     df["relevance"] = df.rel
     ordering_col = "score"
     highlight_column = "relevance"
     highlight_threshold = 1
-
+    
 if DEMO_STEPS.index(st.session_state.step) >= DEMO_STEPS.index("ndcg"):
     with col_features[0]:
         st.markdown("##### Mesure de la qualité d'un ranking")
@@ -187,16 +189,17 @@ if DEMO_STEPS.index(st.session_state.step) >= DEMO_STEPS.index("ndcg"):
         with cols[1]:
             st.latex(r"nDCG_k = DCG_k / optimalDCG_k")
             
-    df["DG"] = df["relevance"] / np.log1p(df["rang"])
-    cols = st.columns([2, 1])
-    with cols[0]:
-        st.select_slider("k", options=[1, 2, 3, 5, 10, 100], key="cutoff")
-    with cols[1]:
-        k = st.session_state.cutoff
-        dcg = df.sort_values("score", ascending=False).DG.iloc[:k].sum()
-        idcg = df.sort_values("relevance", ascending=False).DG.iloc[:k].sum()
-        st.markdown(f"nDCG_{k}={dcg / idcg}")
-    
+        df["DG"] = df["relevance"] / np.log1p(df["rang"])
+        cols = st.columns([1, 2])
+        with cols[0]:
+            st.radio("k", options=[1, 3, 5, 10], index=1, key="cutoff", horizontal=True, label_visibility="visible")
+        with cols[1]:
+            k = st.session_state.cutoff
+            dcg = df.sort_values("score", ascending=False).DG.iloc[:k].sum()
+            idcg = df.sort_values("relevance", ascending=False).DG.iloc[:k].sum()
+            idcg = df[df.relevance > 0].sort_values("relevance", ascending=False).reset_index(drop=True).reset_index()
+            idcg = (idcg.relevance / np.log1p(1 + idcg.index)).sum()
+            st.markdown(f"**=> nDCG_{k}={dcg / idcg}**")
     
 
 # st.dataframe(df.drop(columns=["hash", "content"]))
