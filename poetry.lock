@@ -1240,6 +1240,16 @@ files = [
 six = ">=1.5"
 
 [[package]]
+name = "pytrec-eval"
+version = "0.5"
+description = "Provides Python bindings for popular Information Retrieval measures implemented within trec_eval."
+optional = false
+python-versions = ">=3"
+files = [
+    {file = "pytrec_eval-0.5.tar.gz", hash = "sha256:d9eb4616e7d6b73bf1b5ba4c2c4916e88124e790b53fd61610c30158999e7bde"},
+]
+
+[[package]]
 name = "pytz"
 version = "2023.3.post1"
 description = "World timezone definitions, modern and historical"
@@ -1953,4 +1963,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "dcc8c11f8f07fff50dd6c3f0cd329d60150b4510003864df5a9582ac2231c789"
+content-hash = "898937725867eb6c3bc1e9a6035f4006370e3f1c026327fa7aa25453fc840ce3"
