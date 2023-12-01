@@ -94,7 +94,6 @@ df = prepare_df()
 
 COL_OPTIMAL_ORDER = [
     "relevance",
-    "rang",
     "score",
     "DG",
     "snippet",
@@ -118,12 +117,22 @@ highlight_threshold = 1000
 ascending = False
     
 
-# display
-st.title(f"Démo moteur de recherche")
 DEMO_STEPS = ["docs", "features", "score", "relevance", "ndcg", "ndcg-values", "ltr"]
-st.radio(label="version", options=DEMO_STEPS, horizontal=True, key="step")
 
-col_features = st.columns([20, 10, 1])
+# display
+cols = st.columns([3, 5, 1])
+with cols[0]:
+    st.markdown(f"### Démo moteur de recherche")
+with cols[1]:
+    st.radio(label="version", options=DEMO_STEPS, horizontal=True, key="step")
+with cols[2]:
+    st.radio(label="display", options=["wide", "long"], horizontal=True, key="display")
+
+if st.session_state.display == "wide":
+    col_features = st.columns([130, 75, 155, 1])
+else:
+    col_features = st.columns([15, 10, 1])
+    
 with col_features[-1]:
     for _ in range(32):
         st.markdown("")
@@ -177,24 +186,24 @@ if DEMO_STEPS.index(st.session_state.step) >= DEMO_STEPS.index("ndcg"):
     with col_features[0]:
         st.markdown("##### Mesure de la qualité d'un ranking")
         # st.markdown("Cutoff k=5")
-        col_params = [1, 1]
+        col_params = [3, 5]
         cols = st.columns(col_params)
         with cols[0]:
             st.write("")
-            st.write("DG: Gain marginal d'un document")
+            st.write("Gain d'un document")
         with cols[1]:
             st.latex(r"DG_i = \frac{r_i}{\log(i+1)}")
         cols = st.columns(col_params)
         with cols[0]:
             st.write("")
             st.write("")
-            st.write("DCG: Gain cumulé sur les documents rankés")
+            st.write("Gain cumulé")
         with cols[1]:
             st.latex(r"DCG_k = \sum_{i=1}^k DG_i = \sum_{i=1}^k \frac{r_i}{\log(i+1)}")
         cols = st.columns(col_params)
         with cols[0]:
             st.write("")
-            st.write("NDCG: Normalisation par le DCG optimal")
+            st.write("Normalisation par DCG optimal")
         with cols[1]:
             st.latex(r"nDCG_k = DCG_k / optimalDCG_k")
             
@@ -209,19 +218,23 @@ if DEMO_STEPS.index(st.session_state.step) >= DEMO_STEPS.index("ndcg-values"):
         idcgs = df[df.relevance > 0].sort_values("relevance", ascending=False).reset_index(drop=True).reset_index()
         idcg = (idcgs.relevance / np.log1p(1 + idcgs.index)).iloc[:k].sum()
     
-
-st.markdown("---")
-cols = st.columns([2, 2])
-with cols[0]:
-    st.markdown("#### Résultats pour \"" + st.session_state.query + "\"")
-with cols[1]:
-    if DEMO_STEPS.index(st.session_state.step) >= DEMO_STEPS.index("ndcg-values"):
-        st.latex(rf"nDCG_{k}={dcg / idcg:1.3f}")
-display_df = df.nlargest(10, ordering_col).sort_values(ordering_col, ascending=ascending)
-st.dataframe(
-    display_df.style.apply(
-        highlight_greaterthan, threshold=highlight_threshold, column=highlight_column, axis=1
-    ), 
-    hide_index=True,
-    column_order=[c for c in COL_OPTIMAL_ORDER if c in display_df.columns]
-)
+if st.session_state.display == "wide":
+    cc = col_features[2]
+else:
+    st.markdown("---")
+    cc = st.columns(1)[0]
+with cc:
+    cols = st.columns([2, 2])
+    with cols[0]:
+        st.markdown("#### Résultats pour \"" + st.session_state.query + "\"")
+    with cols[1]:
+        if DEMO_STEPS.index(st.session_state.step) >= DEMO_STEPS.index("ndcg-values"):
+            st.latex(rf"nDCG_{k}={dcg / idcg:1.3f}")
+    display_df = df.nlargest(10, ordering_col).sort_values(ordering_col, ascending=ascending)
+    st.dataframe(
+        display_df.style.apply(
+            highlight_greaterthan, threshold=highlight_threshold, column=highlight_column, axis=1
+        ).format(precision=2), 
+        hide_index=True,
+        column_order=[c for c in COL_OPTIMAL_ORDER if c in display_df.columns]
+    )
