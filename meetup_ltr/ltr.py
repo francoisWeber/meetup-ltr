@@ -18,6 +18,15 @@ st.set_page_config(
         "About": "Searching into Dailymotion database.  Experimental app. April 2023",
     },
 )
+st.markdown('''
+    <style>
+    .katex-html {
+        text-align: left;
+    }
+    </style>''',
+    unsafe_allow_html=True
+)
+
 
 
 @st.cache_data
@@ -111,12 +120,12 @@ ascending = False
 
 # display
 st.title(f"Démo moteur de recherche")
-DEMO_STEPS = ["docs", "features", "score", "relevance", "ndcg", "ltr"]
+DEMO_STEPS = ["docs", "features", "score", "relevance", "ndcg", "ndcg-values", "ltr"]
 st.radio(label="version", options=DEMO_STEPS, horizontal=True, key="step")
 
 col_features = st.columns([20, 10, 1])
 with col_features[-1]:
-    for _ in range(33):
+    for _ in range(32):
         st.markdown("")
 with col_features[0]:
     # version features
@@ -190,21 +199,24 @@ if DEMO_STEPS.index(st.session_state.step) >= DEMO_STEPS.index("ndcg"):
             st.latex(r"nDCG_k = DCG_k / optimalDCG_k")
             
         df["DG"] = df["relevance"] / np.log1p(df["rang"])
-        cols = st.columns([1, 2])
-        with cols[0]:
-            st.radio("k", options=[1, 3, 5, 10], index=1, key="cutoff", horizontal=True, label_visibility="visible")
-        with cols[1]:
-            k = st.session_state.cutoff
-            dcg = df.sort_values("score", ascending=False).DG.iloc[:k].sum()
-            idcg = df.sort_values("relevance", ascending=False).DG.iloc[:k].sum()
-            idcg = df[df.relevance > 0].sort_values("relevance", ascending=False).reset_index(drop=True).reset_index()
-            idcg = (idcg.relevance / np.log1p(1 + idcg.index)).sum()
-            st.markdown(f"**=> nDCG_{k}={dcg / idcg}**")
+        
+if DEMO_STEPS.index(st.session_state.step) >= DEMO_STEPS.index("ndcg-values"):
+    with col_features[0]:
+        st.radio("Choix de la valeur du seuil k", options=[1, 3, 5, 10], index=1, key="cutoff", horizontal=True, label_visibility="visible")
+        k = st.session_state.cutoff
+        dcgs = df.sort_values("score", ascending=False).DG.iloc[:k]
+        dcg = dcgs.sum()
+        idcgs = df[df.relevance > 0].sort_values("relevance", ascending=False).reset_index(drop=True).reset_index()
+        idcg = (idcgs.relevance / np.log1p(1 + idcgs.index)).iloc[:k].sum()
     
 
-# st.dataframe(df.drop(columns=["hash", "content"]))
-
-st.header("Search engine results for query: " + st.session_state.query)
+st.markdown("---")
+cols = st.columns([2, 2])
+with cols[0]:
+    st.markdown("#### Résultats pour \"" + st.session_state.query + "\"")
+with cols[1]:
+    if DEMO_STEPS.index(st.session_state.step) >= DEMO_STEPS.index("ndcg-values"):
+        st.latex(rf"nDCG_{k}={dcg / idcg:1.3f}")
 display_df = df.nlargest(10, ordering_col).sort_values(ordering_col, ascending=ascending)
 st.dataframe(
     display_df.style.apply(
