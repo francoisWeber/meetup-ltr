@@ -91,6 +91,7 @@ def summurize(query: str, docs: list, pre_prompt: str):
     )
     return completion.choices[0].message.content
 
+
 class FasttextVectorizer:
     def __init__(self, ft):
         self.ft = ft
@@ -152,10 +153,9 @@ st.dataframe(
 )
 
 
-
 if st.session_state.rag:
     client = get_bot()
-    # pre_prompt = """You are a helpful assistant, ready to summurize relevant documents to answer a query. 
+    # pre_prompt = """You are a helpful assistant, ready to summurize relevant documents to answer a query.
     # If the query is vague, don't hesitate to derive a plausible question from it.
     # If a document is not relevant, try to find anything related to the query in it or ignore it"""
     pre_prompt = """You are a question-answering assistant that take as input a query and documents that might answer the query. 
