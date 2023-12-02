@@ -18,15 +18,15 @@ st.set_page_config(
         "About": "Searching into Dailymotion database.  Experimental app. April 2023",
     },
 )
-st.markdown('''
+st.markdown(
+    """
     <style>
     .katex-html {
         text-align: left;
     }
-    </style>''',
-    unsafe_allow_html=True
+    </style>""",
+    unsafe_allow_html=True,
 )
-
 
 
 @st.cache_data
@@ -56,6 +56,7 @@ def get_corpus_tf():
     tf = craft_tf()
     return tf.transform(corpus)
 
+
 @st.cache_data
 def prepare_df():
     df = load_corpus()
@@ -68,17 +69,16 @@ def prepare_df():
 
 if "step" not in st.session_state:
     st.session_state.step = "docs"
-    
+
 if "cutoff" not in st.session_state:
     st.session_state.cutoff = 1
-    
+
 if "query" not in st.session_state:
     st.session_state.query = "meetup strasbourg deep learning"
 
 bm25 = craft_bm25()
 tf = craft_tf()
 corpus_tf = get_corpus_tf()
-
 
 
 def highlight_greaterthan(s, threshold, column):
@@ -115,7 +115,7 @@ ordering_col = "hash"
 highlight_column = "content_length"
 highlight_threshold = 1000
 ascending = False
-    
+
 
 DEMO_STEPS = ["docs", "features", "score", "relevance", "ndcg", "ndcg-values", "ltr"]
 
@@ -132,7 +132,7 @@ if st.session_state.display == "wide":
     col_features = st.columns([130, 75, 155, 1])
 else:
     col_features = st.columns([15, 10, 1])
-    
+
 with col_features[-1]:
     for _ in range(32):
         st.markdown("")
@@ -175,13 +175,12 @@ with col_features[1]:
         highlight_threshold = df.iloc[1].score
 
 
-    
 if DEMO_STEPS.index(st.session_state.step) >= DEMO_STEPS.index("relevance"):
     df["relevance"] = df.rel
     ordering_col = "score"
     highlight_column = "relevance"
     highlight_threshold = 1
-    
+
 if DEMO_STEPS.index(st.session_state.step) >= DEMO_STEPS.index("ndcg"):
     with col_features[0]:
         st.markdown("##### Mesure de la qualité d'un ranking")
@@ -206,18 +205,30 @@ if DEMO_STEPS.index(st.session_state.step) >= DEMO_STEPS.index("ndcg"):
             st.write("Normalisation par DCG optimal")
         with cols[1]:
             st.latex(r"nDCG_k = DCG_k / optimalDCG_k")
-            
+
         df["DG"] = df["relevance"] / np.log1p(df["rang"])
-        
+
 if DEMO_STEPS.index(st.session_state.step) >= DEMO_STEPS.index("ndcg-values"):
     with col_features[0]:
-        st.radio("Choix de la valeur du seuil k", options=[1, 3, 5, 10], index=1, key="cutoff", horizontal=True, label_visibility="visible")
+        st.radio(
+            "Choix de la valeur du seuil k",
+            options=[1, 3, 5, 10],
+            index=1,
+            key="cutoff",
+            horizontal=True,
+            label_visibility="visible",
+        )
         k = st.session_state.cutoff
         dcgs = df.sort_values("score", ascending=False).DG.iloc[:k]
         dcg = dcgs.sum()
-        idcgs = df[df.relevance > 0].sort_values("relevance", ascending=False).reset_index(drop=True).reset_index()
+        idcgs = (
+            df[df.relevance > 0]
+            .sort_values("relevance", ascending=False)
+            .reset_index(drop=True)
+            .reset_index()
+        )
         idcg = (idcgs.relevance / np.log1p(1 + idcgs.index)).iloc[:k].sum()
-    
+
 if st.session_state.display == "wide":
     cc = col_features[2]
 else:
@@ -226,15 +237,20 @@ else:
 with cc:
     cols = st.columns([2, 2])
     with cols[0]:
-        st.markdown("#### Résultats pour \"" + st.session_state.query + "\"")
+        st.markdown('#### Résultats pour "' + st.session_state.query + '"')
     with cols[1]:
         if DEMO_STEPS.index(st.session_state.step) >= DEMO_STEPS.index("ndcg-values"):
             st.latex(rf"nDCG_{k}={dcg / idcg:1.3f}")
-    display_df = df.nlargest(10, ordering_col).sort_values(ordering_col, ascending=ascending)
+    display_df = df.nlargest(10, ordering_col).sort_values(
+        ordering_col, ascending=ascending
+    )
     st.dataframe(
         display_df.style.apply(
-            highlight_greaterthan, threshold=highlight_threshold, column=highlight_column, axis=1
-        ).format(precision=2), 
+            highlight_greaterthan,
+            threshold=highlight_threshold,
+            column=highlight_column,
+            axis=1,
+        ).format(precision=2),
         hide_index=True,
-        column_order=[c for c in COL_OPTIMAL_ORDER if c in display_df.columns]
+        column_order=[c for c in COL_OPTIMAL_ORDER if c in display_df.columns],
     )
