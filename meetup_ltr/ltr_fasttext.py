@@ -72,7 +72,7 @@ def get_bot():
 @st.spinner("Doing magic :p")
 def summurize(query: str, docs: list, pre_prompt: str):
     content = [
-        f"que fait le meetup deep learning à strasbourg: {query}",
+        f"Voici la question de l'utilisateur: {query}",
         "Voici les documents sur lequels t'appuyer pour répondre:",
     ]
     content += [f"document {i+1}: {doc}." for i, doc in enumerate(docs)]
